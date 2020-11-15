@@ -1,0 +1,42 @@
+{
+  "name": "url-shortner-app",
+  "version": "1.0.0",
+  "description": "Modern URL shortener.",
+  "main": "./server/server.js",
+  "scripts": {
+    "client": "cd client && yarn start",
+    "server": "cd server && yarn start",
+    "dev": "node server/server.js",
+    "build": "next build",
+    "start": "npm run migrate && cross-env NODE_ENV=production node server/server.js",
+    "migrate": "knex migrate:latest",
+    "heroku-postbuild": "cd client && npm install --only=dev && npm install && npm run build"
+  },
+  "dependencies": {
+    "@sentry/node": "^5.27.4",
+    "@sentry/tracing": "^5.27.4",
+    "body-parser": "^1.18.3",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^8.2.0",
+    "envalid": "^6.0.2",
+    "express": "^4.16.4",
+    "express-async-handler": "^1.1.4",
+    "helmet": "^4.2.0",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "knex": "^0.21.12",
+    "morgan": "^1.10.0",
+    "next": "^10.0.1",
+    "passport": "^0.4.1",
+    "pg": "^8.5.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-router-dom": "^5.2.0",
+    "redis": "^3.0.2",
+    "signale": "^1.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^4.0.1"
+  }
+}
