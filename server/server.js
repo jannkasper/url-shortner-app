@@ -37,7 +37,6 @@ app.prepare().then(async() => {
             user: ['id', 'email']
         }))
     };
-    console.log("DEFAULT:" + env.DEFAULT_DOMAIN);
     server.use(helmet());
     server.use(cookieParser());
     server.use(express.json());
@@ -50,7 +49,7 @@ app.prepare().then(async() => {
 
     server.use('/api', routes);
 
-    // server.get('./:id',asyncHandler(TODO));
+    server.get('/:id',asyncHandler(links.redirect(app)));
 
 
     // Error handler

@@ -6,34 +6,34 @@ exports.seed = function(knex) {
       // Inserts seed entries
       return knex('links').insert([
         {
-            address: "address1",
+            address: "test1",
             description: "description1",
             banned: undefined,
             banned_by_id: undefined,
             domain_id: "1",
             password: undefined,
             expire_in: new Date().toISOString(),
-            target: 'target1',
+            target: 'https:/www.apple.com',
             user_id: 1
         }, {
-              address: "address2",
+              address: "test2",
               description: "description2",
               banned: undefined,
               banned_by_id: undefined,
               domain_id: "2",
               password: undefined,
               expire_in: new Date().toISOString(),
-              target: 'target1',
+              target: 'https:/www.interia.pl',
               user_id: 2
           }, {
-              address: "address3",
+              address: "test3",
               description: "description3",
               banned: undefined,
               banned_by_id: undefined,
               domain_id: "3",
               password: undefined,
               expire_in: new Date().toISOString(),
-              target: 'target1',
+              target: 'https:/www.youtube.com',
               user_id: 3
           },
 

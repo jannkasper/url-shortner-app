@@ -8,8 +8,8 @@ exports.seed = function(knex) {
                 {
                     banned: false,
                     banned_by_id: undefined,
-                    address: "www.google.com",
-                    homepage: undefined,
+                    address: "localhost:3000",
+                    homepage: "https://www.google.pl/",
                     user_id: 1
                 }, {
                     banned: false,
