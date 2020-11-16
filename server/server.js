@@ -15,6 +15,8 @@ const routes = require('./routes');
 const {env} = require('./env');
 const nextApp = require('next');
 
+require('./passport');
+
 const port = env.PORT;
 const app = nextApp({dir: "./client", dev: env.isDev});
 const handle = app.getRequestHandler();
@@ -41,7 +43,7 @@ app.prepare().then(async() => {
     server.use(cookieParser());
     server.use(express.json());
     server.use(express.urlencoded({extended: true}));
-    server.use(passport.initialize());
+    server.use(passport.initialize(undefined));
     server.use(express.static('static'));
     server.use(helpers.ip);
 

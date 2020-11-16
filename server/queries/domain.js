@@ -15,4 +15,8 @@ exports.find = async (match) => {
     }
 
     return domain;
+};
+
+exports.get = async (match) => {
+    return knex.db("domains").where(match);
 }

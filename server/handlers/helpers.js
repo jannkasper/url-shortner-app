@@ -1,3 +1,4 @@
+const {validationResult} = require('express-validator');
 const signale = require('signale');
 const Sentry = require('@sentry/node');
 
@@ -24,4 +25,13 @@ exports.error = (error, req, res, next) => {
     }
 
     return res.status(500).json({error: 'An error occured.'});
+};
+
+exports.verify = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        const message = errors.array()[0].msg;
+        throw new CustomError(message, 400);
+    }
+    return next();
 };

@@ -9,9 +9,15 @@ const client = redis.createClient({
     ...(env.REDIS_PASSWORD && {password: env.REDIS_PASSWORD})
 });
 
+client.flushdb( function (err, succeeded) {
+    console.log(succeeded); // will be true if successfull
+});
+
 exports.get = util.promisify(client.get).bind(client);
 
 exports.set = util.promisify(client.set).bind(client);
+
+exports.del = util.promisify(client.del).bind(client);
 
 exports.key = {
     link: (address, domain_id, user_id) => `${address}-${domain_id || ""}-${user_id || ""}`,
@@ -20,3 +26,11 @@ exports.key = {
     host: (address) => `h-${address}`,
     user: (emailOrKey) => `u-${emailOrKey}`
 };
+// ?????
+exports.remove = {
+    user: (user) => {
+        if (!user) return;
+        del(key.user(user.email));
+        del(key.user(user.apikey));
+    }
+}

@@ -1,9 +1,25 @@
 var express = require('express');
-var router = express.Router();
+const asyncHandler = require('express-async-handler');
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send(`hello ${req.realIP}`);
-});
+const helpers = require('../handlers/helpers');
+const validators = require('../handlers/validators');
+const user = require('../handlers/users');
+const auth = require('../handlers/auth');
+
+const router = express.Router();
+
+router.get('/',
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    asyncHandler(user.get)
+);
+
+router.get('/delete',
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    validators.deleteUser,
+    asyncHandler(helpers.verify),
+    asyncHandler(user.remove)
+);
 
 module.exports = router;

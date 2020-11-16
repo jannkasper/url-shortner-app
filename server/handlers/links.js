@@ -14,7 +14,7 @@ exports.redirect = (app) => async (req, res, next) => {
 
     // 1. If custom domain, get domain info
     const { host } = req.headers;
-    // const domain = host !== env.DEFAULT_DOMAIN ? await queries.default.domain.find({address: host}) : null;
+    const domain = host !== env.DEFAULT_DOMAIN ? await queries.default.domain.find({address: host}) : null;
 
     // 2. Get link
     const address = req.params.id.replace('+', '');
