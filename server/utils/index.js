@@ -36,6 +36,11 @@ exports.sanitize = {
         uuid: undefined,
         id: link.uuid,
         password: !!link.password,
-        link: generateShortLink(link.address, link.domain)
+        link: exports.generateShortLink(link.address, link.domain)
     })
-}
+};
+
+exports.addProtocol = (url) => {
+    const hasProtocol = /^\w+:\/\//.test(url);
+    return hasProtocol ? url : `http://${url}`;
+};

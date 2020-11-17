@@ -1,14 +1,16 @@
 const passport = require('passport');
+const axios = require('axios');
 
 const {CustomError} = require('../utils');
-const  utils = require('../utils');
+const utils = require('../utils');
+const {env} = require('../env');
 
-const authenticate = (type, error, isStrict = true) => async function auth(req, res ,next) {
+const authenticate = (type, error, isStrict = true) => async function auth(req, res , next) {
     if (req.user) {
         return next();
     }
 
-    passport.authenticate(type, (err, user) => {
+    await passport.authenticate(type, { session: false },(err, user) => {
         if (err) {
             return next(err);
         }
@@ -27,10 +29,11 @@ const authenticate = (type, error, isStrict = true) => async function auth(req, 
         }
         return next();
 
-    })(req, res, next)
-
+    })(req, res, next);
 }
 
 
 exports.apikey = authenticate("localapikey", "API key is not correct", false);
 exports.jwt = authenticate("jwt", "Unauthorized.");
+exports.jwtLoose = authenticate("jwt", "Unauthorized.", false);
+

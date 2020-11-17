@@ -1,5 +1,5 @@
-const knex = require('../knex');
-const redis = require('../redis');
+const knex = require("../knex");
+const redis = require("../redis");
 
 const selectable = [
     "links.id",
@@ -22,17 +22,17 @@ const normalizeMatch = (match) => {
     const newMatch = {...match};
 
     if (newMatch.address) {
-        newMatch['links.address'] = newMatch.address;
+        newMatch["links.address"] = newMatch.address;
         delete newMatch.address;
     }
 
     if (newMatch.user_id) {
-        newMatch['links.user_id'] = newMatch.user_id;
+        newMatch["links.user_id"] = newMatch.user_id;
         delete newMatch.user_id;
     }
 
     if (newMatch.uuid) {
-        newMatch['links.uuid'] = newMatch.uuid;
+        newMatch["links.uuid"] = newMatch.uuid;
         delete newMatch.uuid;
     }
 
@@ -49,16 +49,38 @@ exports.find = async (match) => {
         }
     }
 
-    const link = await knex.db('links')
+    const link = await knex.db("links")
         .select(...selectable)
         .where(normalizeMatch(match))
-        .leftJoin('domains', 'links.domain_id', 'domains.id')
+        .leftJoin("domains", "links.domain_id", "domains.id")
         .first();
 
     if (link) {
         const key = redis.key.link(link.address, link.domain_id);
-        redis.set(key, JSON.stringify(link), 'EX', 60*60*2);
+        redis.set(key, JSON.stringify(link), "EX", 60*60*2);
     }
 
     return link;
 };
+
+
+exports.create = async (params) => {
+    let encryptedPassword = null;
+
+    if (params.password) {
+        const salt = await bcrypt.genSalt(12);
+        encryptedPassword = await bcrypt.hash(params.password, salt);
+    }
+
+    const [link] = await knex.db("links").insert({
+        password: encryptedPassword,
+        domain_id: params.domain_id || null,
+        user_id: params.user_id || null,
+        address: params.address,
+        description: params.description || null,
+        expire_in: params.expire_in || null,
+        target: params.target
+    }, "*");
+
+    return link;
+}

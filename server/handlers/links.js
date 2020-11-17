@@ -1,8 +1,10 @@
 const isbot = require('isbot');
+const URL = require('url');
 
 const validators = require('./validators');
 const queries = require('../queries');
 const queues = require('../queues');
+const utils = require('../utils');
 const {env} = require('../env');
 
 
@@ -69,4 +71,23 @@ exports.redirectCustomDomain = async (req, res, next) => {
     }
 
     return next();
+};
+
+exports.create = async (req, res) => {
+    const {reuse, password, customurl, description, target, domain, expire_in} = req.body;
+    const domain_id = domain ? domain.id : null;
+
+    const targetDomain = URL.parse(target).hostname;
+
+
+    //Create new link
+    const address = customurl;
+
+    const link = await queries.default.link.create({password, address, domain_id, description, target, expire_in, user_id: req.user && req.user.id})
+
+    return res.status(201).send(utils.sanitize.link({...link, domain: domain?.address}))
+
+
+
+
 };

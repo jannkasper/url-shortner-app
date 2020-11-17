@@ -1,7 +1,7 @@
 const {cleanEnv, num, str, bool} = require('envalid');
 
 exports.env = cleanEnv(process.env, {
-    PORT: num({ default: 3000 }),
+    PORT: num({ default: 4001 }),
     SITE_NAME: str({ default: "shortner-url" }),
     DEFAULT_DOMAIN: str({ example: "jkasper-shortner-url.heroku.com" }),
     LINK_LENGTH: num({ default: 6 }),

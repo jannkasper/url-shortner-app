@@ -9,7 +9,7 @@ const client = redis.createClient({
     ...(env.REDIS_PASSWORD && {password: env.REDIS_PASSWORD})
 });
 
-client.flushdb( function (err, succeeded) {
+client.flushall( function (err, succeeded) {
     console.log(succeeded); // will be true if successfull
 });
 

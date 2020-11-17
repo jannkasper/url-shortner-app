@@ -8,7 +8,7 @@ const auth = require('./auth');
 const router = express.Router();
 
 // router.use('/domains', domains);
-// router.use('/links', links);
+router.use('/links', links);
 router.use('/users', users);
 // router.use('/auth', auth);
 
