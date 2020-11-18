@@ -65,4 +65,23 @@ exports.add = async (params, user) => {
         ...user,
         ...data
     };
+};
+
+
+exports.update = async (match, update) => {
+    const query = knex.db("users");
+
+    Object.entries(match).forEach(([key, value]) => {
+        query.andWhere(key, ...(Array.isArray(value) ? value : [value]));
+    });
+
+    const users = await query.update(
+        { ...update, updated_at: new Date().toISOString() },
+        "*"
+    );
+
+    // TODO redis
+    users.forEach(redis.remove.user);
+
+    return users;
 }

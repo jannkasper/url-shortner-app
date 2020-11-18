@@ -66,3 +66,28 @@ exports.signup = async (req, res) => {
 
 };
 
+exports.verify = async (req, res, next) => {
+    if (!req.params.verificationToken) return next();
+
+    const [user] = await queries.default.user.update(
+        {
+            verification_token: req.params.verificationToken,
+            verification_expires: [">", new Date().toISOString()]
+        },
+        {
+            verified: true,
+            verification_token: null,
+            verification_expires: null
+        }
+    );
+
+    // TODO Check it later
+    if (user) {
+        const token = utils.signToken(user);
+        req.token = token;
+    }
+
+    return next();
+
+};
+

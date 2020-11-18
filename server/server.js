@@ -8,6 +8,7 @@ const Sentry = require('@sentry/node');
 const cookieParser = require('cookie-parser');
 
 const helpers = require('./handlers/helpers');
+const auth = require('./handlers/auth');
 const links = require('./handlers/links');
 const routes = require('./routes');
 
@@ -50,6 +51,11 @@ app.prepare().then(async() => {
     server.use(asyncHandler(links.redirectCustomDomain));
 
     server.use('/api', routes);
+
+    server.get("/verify/:verificationToken?",
+        asyncHandler(auth.verify),
+        (req, res) => app.render(req, res, "/verify", { token: req.token })
+    );
 
     server.get('/:id',asyncHandler(links.redirect(app)));
 
