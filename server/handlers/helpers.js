@@ -35,3 +35,29 @@ exports.verify = (req, res, next) => {
     }
     return next();
 };
+
+exports.query = (req, res, next) => {
+    const { limit, skip, all } = req.query;
+    const { admin } = req.user || {};
+
+    req.query.limit = parseInt(limit) || 10;
+    req.query.skip = parseInt(skip) || 0;
+
+    if (req.query.limit > 50) {
+        req.query.limit = 50;
+    }
+
+    req.query.all = admin ? all === "true" : false;
+
+    next();
+};
+
+exports.verify = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const message = errors.array()[0].msg;
+        throw new CustomError(message, 400);
+    }
+    return next();
+
+};

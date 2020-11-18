@@ -131,4 +131,13 @@ exports.createLink = [
         })
         .withMessage("You can't use this domain.")
 
+];
+
+exports.deleteLink = [
+    param("id", "ID is invalid.")
+        .exists({
+            checkFalsy: true,
+            checkNull: true
+        })
+        .isLength({ min: 36, max: 36 })
 ]

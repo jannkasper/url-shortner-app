@@ -32,5 +32,9 @@ exports.remove = {
         if (!user) return;
         del(key.user(user.email));
         del(key.user(user.apikey));
-    }
-}
+    },
+    link: (link) => {
+        if (!link) return;
+        del(key.link(link.address, link.domain_id));
+    },
+};

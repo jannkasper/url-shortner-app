@@ -6,6 +6,7 @@ const queries = require('../queries');
 const queues = require('../queues');
 const utils = require('../utils');
 const {env} = require('../env');
+const {CustomError} = require('../utils');
 
 
 exports.redirect = (app) => async (req, res, next) => {
@@ -79,15 +80,44 @@ exports.create = async (req, res) => {
 
     const targetDomain = URL.parse(target).hostname;
 
-
     //Create new link
     const address = customurl;
 
     const link = await queries.default.link.create({password, address, domain_id, description, target, expire_in, user_id: req.user && req.user.id})
 
     return res.status(201).send(utils.sanitize.link({...link, domain: domain?.address}))
-
-
-
-
 };
+
+
+exports.get = async (req, res) => {
+    const { limit, skip, search, all } = req.query;
+    const userId = req.user.id;
+
+    const match = {
+        ...(!all && { user_id: userId })
+    };
+
+    const [links, total] = await Promise.all([
+        queries.default.link.get(match, { limit, search, skip }),
+        queries.default.link.total(match, { search })
+    ]);
+
+    const data = links.map(utils.sanitize.link);
+
+    return res.send({total, limit, skip, data});
+};
+
+exports.remove = async (req, res) => {
+    const link = await queries.default.link.remove({
+        uuid: req.params.id,
+        ...(!req.user.admin && { user_id: null })
+    });
+
+    if (!link) {
+        throw new CustomError("Could not delete the link");
+    }
+
+    return res
+        .status(200)
+        .send({ message: "Link has been deleted successfully." });
+}

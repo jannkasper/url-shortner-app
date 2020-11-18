@@ -1,6 +1,8 @@
 const knex = require("../knex");
 const redis = require("../redis");
 
+const {CustomError} = require('../utils');
+
 const selectable = [
     "links.id",
     "links.address",
@@ -83,4 +85,65 @@ exports.create = async (params) => {
     }, "*");
 
     return link;
+};
+
+
+exports.total = async (match, params) => {
+    const query = knex.db("links");
+
+    Object.entries(match).forEach(([key, value]) => {
+        query.andWhere(key, ...(Array.isArray(value) ? value : [value]));
+    });
+
+    if (params.search) {
+        query.andWhereRaw(
+            "concat_ws(' ', description, links.address, target) ILIKE '%' || ? || '%'",
+            [params.search]
+        );
+    }
+
+    const [{ count }] = await query.count("id");
+
+    return typeof count === "number" ? count : parseInt(count);
+}
+
+
+exports.get = async (match, params) => {
+    const query = knex.db("links")
+        .select(...selectable)
+        .where(normalizeMatch(match))
+        .offset(params.skip)
+        .limit(params.limit)
+        .orderBy("created_at", "desc");
+
+    if (params.search) {
+        query.andWhereRaw(
+            "concat_ws(' ', description, links.address, target) ILIKE '%' || ? || '%'",
+            [params.search]
+        );
+    }
+
+    query.leftJoin("domains", "links.domain_id", "domains.id");
+
+    const links = await query;
+
+    return links;
+};
+
+exports.remove = async (match) => {
+    const link = await knex.db("links")
+        .where(match)
+        .first();
+
+    if (!link) {
+        throw new CustomError("Link was not found.");
+    }
+
+    const deletedLink = await knex.db("links")
+        .where("id", link.id)
+        .delete();
+
+    redis.remove.link(link);
+
+    return !!deletedLink;
 }
