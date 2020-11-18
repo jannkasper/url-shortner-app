@@ -32,6 +32,7 @@
     "http-errors": "~1.6.3",
     "isbot": "^3.0.15",
     "jade": "~1.11.0",
+    "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.12",
     "morgan": "^1.10.0",
     "ms": "^2.1.2",
@@ -46,7 +47,8 @@
     "react-router-dom": "^5.2.0",
     "redis": "^3.0.2",
     "signale": "^1.4.0",
-    "url-regex": "^5.0.0"
+    "url-regex": "^5.0.0",
+    "uuidv4": "^6.2.5"
   },
   "devDependencies": {
     "concurrently": "^4.0.1"

@@ -1,4 +1,7 @@
+const {addDays} = require("date-fns");
+
 const {env} = require('../env');
+const JWT = require('jsonwebtoken');
 
 class CustomError extends Error {
     constructor(message, statusCode = 500, data) {
@@ -43,4 +46,19 @@ exports.sanitize = {
 exports.addProtocol = (url) => {
     const hasProtocol = /^\w+:\/\//.test(url);
     return hasProtocol ? url : `http://${url}`;
+};
+
+exports.signToken = (user) => {
+    console.log("HELLO");
+    JWT.sign(
+        {
+            iss: "ApiAuth",
+            sub: user.email,
+            domain: user.domain || "",
+            admin: isAdmin(user.email),
+            iat: parseInt((new Date().getTime() / 1000).toFixed(0)),
+            exp: parseInt((addDays(new Date(), 7).getTime() / 1000).toFixed(0))
+        },
+        env.JWT_SECRET
+    )
 };

@@ -5,6 +5,7 @@ const {bcrypt} = require("bcryptjs");
 const ms = require("ms");
 const { isAfter, subDays, subHours, addMilliseconds } = require("date-fns");
 
+const queries = require('../queries');
 const {addProtocol} = require("../utils");
 const {env} = require("../env");
 
@@ -134,10 +135,47 @@ exports.createLink = [
 ];
 
 exports.deleteLink = [
-    param("id", "ID is invalid.")
+    express_validator.param("id", "ID is invalid.")
         .exists({
             checkFalsy: true,
             checkNull: true
         })
         .isLength({ min: 36, max: 36 })
-]
+];
+
+exports.login = [
+    express_validator.body("password", "Password is not valid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Password length must be between 8 and 64."),
+    express_validator.body("email", "Email is not valid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .trim()
+        .isEmail()
+        .isLength({ min: 0, max: 255 })
+        .withMessage("Email length must be max 255.")
+];
+
+
+exports.signup = [
+    express_validator.body("password", "Password is not valid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Password length must be between 8 and 64."),
+    express_validator.body("email", "Email is not valid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .trim()
+        .isEmail()
+        .isLength({ min: 0, max: 255 })
+        .withMessage("Email length must be max 255.")
+        .custom(async (value, { req }) => {
+            const user = await queries.default.user.find({ email: value });
+
+            if (user) {
+                req.user = user;
+            }
+
+            if (user?.verified) return Promise.reject();
+        })
+        .withMessage("You can't use this email address.")
+];

@@ -1,3 +1,6 @@
+const {addMinutes} = require("date-fns");
+const { uuid } = require("uuidv4");
+
 const knex = require('../knex');
 const redis = require('../redis');
 
@@ -38,3 +41,28 @@ exports.find = async (match) => {
 
     return user;
 };
+
+
+exports.add = async (params, user) => {
+    const data = {
+        email: params.email,
+        password: params.password,
+        verification_token: uuid(),
+        verification_expires: addMinutes(new Date(), 60).toISOString()
+    };
+
+    if (user) {
+        await knex.db("users")
+            .where("id", user.id)
+            .update({ ...data, updated_at: new Date().toISOString() });
+    } else {
+        await knex.db("users").insert(data);
+    }
+
+    redis.remove.user(user);
+
+    return {
+        ...user,
+        ...data
+    };
+}
