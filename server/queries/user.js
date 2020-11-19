@@ -80,7 +80,6 @@ exports.update = async (match, update) => {
         "*"
     );
 
-    // TODO redis
     users.forEach(redis.remove.user);
 
     return users;

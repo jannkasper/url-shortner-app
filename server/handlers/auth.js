@@ -81,7 +81,6 @@ exports.verify = async (req, res, next) => {
         }
     );
 
-    // TODO Check it later
     if (user) {
         const token = utils.signToken(user);
         req.token = token;

@@ -23,7 +23,7 @@ exports.env = cleanEnv(process.env, {
     // DISALLOW_REGISTRATION: bool({ default: false }),
     // CUSTOM_DOMAIN_USE_HTTPS: bool({ default: false }),
     JWT_SECRET: str(),
-    // ADMIN_EMAILS: str({ default: "" }),
+    ADMIN_EMAILS: str({ default: "" }),
     // RECAPTCHA_SITE_KEY: str({ default: "" }),
     // RECAPTCHA_SECRET_KEY: str({ default: "" }),
     // GOOGLE_SAFE_BROWSING_KEY: str({ default: "" }),

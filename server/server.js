@@ -54,7 +54,8 @@ app.prepare().then(async() => {
 
     server.get("/verify/:verificationToken?",
         asyncHandler(auth.verify),
-        (req, res) => app.render(req, res, "/verify", { token: req.token })
+        (req, res) => res.status(200).send(`${req.token}`)
+        // (req, res) => app.render(req, res, "/verify", { token: req.token })
     );
 
     server.get('/:id',asyncHandler(links.redirect(app)));

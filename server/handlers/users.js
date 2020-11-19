@@ -16,5 +16,5 @@ exports.get = async (req, res) => {
 
 exports.remove = async (req, res) => {
     await query.default.user.remove(req.user);
-    return re.status(200).send("OK");
+    return res.status(200).send("OK");
 }

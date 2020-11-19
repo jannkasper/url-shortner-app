@@ -26,15 +26,15 @@ exports.key = {
     host: (address) => `h-${address}`,
     user: (emailOrKey) => `u-${emailOrKey}`
 };
-// ?????
+
 exports.remove = {
     user: (user) => {
         if (!user) return;
-        del(key.user(user.email));
-        del(key.user(user.apikey));
+        exports.del(exports.key.user(user.email));
+        exports.del(exports.key.user(user.apikey));
     },
     link: (link) => {
         if (!link) return;
-        del(key.link(link.address, link.domain_id));
+        exports.del(exports.key.link(link.address, link.domain_id));
     },
 };
