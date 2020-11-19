@@ -1,8 +1,10 @@
 const {Strategy: LocalAPIKeyStrategy} = require('passport-localapikey-update');
-const {Strategy: JwtStrategy, ExtractJwt} = require('passport-jwt');
+// const {Strategy: JwtStrategy, ExtractJwt} = require('passport-jwt');
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 const {Strategy: LocalStrategy} = require('passport-local');
 const passport = require('passport');
-const {bcrypt} = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
 const query = require('./queries');
 const {env} = require('./env');
@@ -66,8 +68,4 @@ passport.use(
         }
         })
 );
-
-
-
-
 

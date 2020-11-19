@@ -179,3 +179,10 @@ exports.signup = [
         })
         .withMessage("You can't use this email address.")
 ];
+
+exports.changePassword = [
+    express_validator.body("password", "Password is not valid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Password length must be between 8 and 64.")
+];

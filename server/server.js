@@ -44,7 +44,7 @@ app.prepare().then(async() => {
     server.use(cookieParser());
     server.use(express.json());
     server.use(express.urlencoded({extended: true}));
-    server.use(passport.initialize(undefined));
+    server.use(passport.initialize());
     server.use(express.static('static'));
     server.use(helpers.ip);
 
@@ -52,10 +52,22 @@ app.prepare().then(async() => {
 
     server.use('/api', routes);
 
+    server.get("/reset-password/:resetPasswordToken?",
+        asyncHandler(auth.resetPassword),
+        (req, res) => res.status(200).send(`${req.token}`)
+        // (req, res) => app.render(req, res, "/reset-password", { token: req.token })
+    );
+
     server.get("/verify/:verificationToken?",
         asyncHandler(auth.verify),
         (req, res) => res.status(200).send(`${req.token}`)
         // (req, res) => app.render(req, res, "/verify", { token: req.token })
+    );
+
+    server.get("/verify-email/:changeEmailToken",
+        asyncHandler(auth.changeEmail),
+        (req, res) => res.status(200).send(`${req.token}`)
+        // (req, res) => app.render(req, res, "/verify-email", { token: req.token })
     );
 
     server.get('/:id',asyncHandler(links.redirect(app)));

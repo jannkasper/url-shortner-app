@@ -36,6 +36,7 @@
     "knex": "^0.21.12",
     "morgan": "^1.10.0",
     "ms": "^2.1.2",
+    "nanoid": "^3.1.16",
     "next": "^10.0.1",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
@@ -46,6 +47,7 @@
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",
     "redis": "^3.0.2",
+    "request": "^2.88.2",
     "signale": "^1.4.0",
     "url-regex": "^5.0.0",
     "uuidv4": "^6.2.5"
