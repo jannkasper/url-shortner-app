@@ -186,3 +186,37 @@ exports.changePassword = [
         .isLength({ min: 8, max: 64 })
         .withMessage("Password length must be between 8 and 64.")
 ];
+
+exports.addDomain = [
+    express_validator.body("address", "Domain is not valid")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isLength({ min: 3, max: 64 })
+        .withMessage("Domain length must be between 3 and 64.")
+        .trim()
+        .customSanitizer(value => {
+            const parsed = URL.parse(value);
+            return parsed.hostname || parsed.href;
+        })
+        .custom(value => urlRegex({ exact: true, strict: false }).test(value))
+        .custom(value => value !== env.DEFAULT_DOMAIN)
+        .withMessage("You can't use the default domain.")
+        .custom(async value => {
+            const domain = await queries.default.domain.find({ address: value });
+            if (domain?.user_id || domain?.banned) return Promise.reject();
+        })
+        .withMessage("You can't add this domain."),
+    express_validator.body("homepage")
+        .optional({ checkFalsy: true, nullable: true })
+        .customSanitizer(addProtocol)
+        .custom(value => urlRegex({ exact: true, strict: false }).test(value))
+        .withMessage("Homepage is not valid.")
+];
+
+exports.removeDomain = [
+    express_validator.param("id", "ID is invalid.")
+        .exists({
+            checkFalsy: true,
+            checkNull: true
+        })
+        .isLength({ min: 36, max: 36 })
+];

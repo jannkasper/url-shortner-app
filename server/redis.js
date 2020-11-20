@@ -37,4 +37,8 @@ exports.remove = {
         if (!link) return;
         exports.del(exports.key.link(link.address, link.domain_id));
     },
+    domain: (domain) => {
+        if (!domain) return;
+        exports.del(exports.key.domain(domain.address))
+    }
 };

@@ -1,7 +1,7 @@
 const {Strategy: LocalAPIKeyStrategy} = require('passport-localapikey-update');
-// const {Strategy: JwtStrategy, ExtractJwt} = require('passport-jwt');
-const JwtStrategy = require('passport-jwt').Strategy;
-const ExtractJwt = require('passport-jwt').ExtractJwt;
+const {Strategy: JwtStrategy, ExtractJwt} = require('passport-jwt');
+// const JwtStrategy = require('passport-jwt').Strategy;
+// const ExtractJwt = require('passport-jwt').ExtractJwt;
 const {Strategy: LocalStrategy} = require('passport-local');
 const passport = require('passport');
 const bcrypt = require('bcryptjs');

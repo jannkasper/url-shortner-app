@@ -19,4 +19,45 @@ exports.find = async (match) => {
 
 exports.get = async (match) => {
     return knex.db("domains").where(match);
-}
+};
+
+exports.add = async (params) => {
+    params.address = params.address.toLowerCase();
+
+    const exists = await knex.db("domains")
+        .where("address", params.address)
+        .first();
+
+    const newDomain = {
+        address: params.address,
+        homepage: params.homepage || null,
+        user_id: params.user_id || null,
+        banned:  !!params.banned
+    };
+
+    let domain;
+    if (exists) {
+        const [response] = await knex.db("domains")
+            .where("id", exists.id)
+            .update({...newDomain, update_at: params.update_at || new Date().toISOString}, "*");
+        domain = response;
+    } else {
+        const [response] = await knex.db("domains").insert(newDomain, "*");
+        domain = response;
+    }
+
+    redis.remove.domain(domain);
+
+    return domain;
+};
+
+
+exports.update = async (match, update) => {
+    const domains = await knex.db("domains")
+        .where(match)
+        .update({...update, updated_at: new Date().toISOString()}, "*");
+
+    domains.forEach(redis.remove.domain);
+
+    return domains;
+};
