@@ -1,13 +1,20 @@
 const express_validator = require("express-validator");
 const URL = require("url");
+const axios = require("axios");
 const urlRegex = require("url-regex");
-const {bcrypt} = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 const ms = require("ms");
+const dns = require("dns");
+const {promisify} = require("util");
 const { isAfter, subDays, subHours, addMilliseconds } = require("date-fns");
 
 const queries = require('../queries');
+const knex = require("../knex");
 const {addProtocol} = require("../utils");
 const {env} = require("../env");
+const {CustomError} = require("../utils");
+
+const dnsLookup = promisify(dns.lookup);
 
 exports.preservedUrls = [
     "login",
@@ -122,7 +129,7 @@ exports.createLink = [
                 return;
             }
 
-            const domain = await query.domain.find({
+            const domain = await queries.default.domain.find({
                 address,
                 user_id: req.user.id
             });
@@ -132,6 +139,59 @@ exports.createLink = [
         })
         .withMessage("You can't use this domain.")
 
+];
+
+exports.editLink = [
+    express_validator.body("target")
+        .optional({ checkFalsy: true, nullable: true })
+        .isString()
+        .trim()
+        .isLength({ min: 1, max: 2040 })
+        .withMessage("Maximum URL length is 2040.")
+        .customSanitizer(addProtocol)
+        .custom(
+            value =>
+                urlRegex({ exact: true, strict: false }).test(value) ||
+                /^(?!https?)(\w+):\/\//.test(value)
+        )
+        .withMessage("URL is not valid.")
+        .custom(value => URL.parse(value).host !== env.DEFAULT_DOMAIN)
+        .withMessage(`${env.DEFAULT_DOMAIN} URLs are not allowed.`),
+    express_validator.body("address")
+        .optional({ checkFalsy: true, nullable: true })
+        .isString()
+        .trim()
+        .isLength({ min: 1, max: 64 })
+        .withMessage("Custom URL length must be between 1 and 64.")
+        .custom(value => /^[a-zA-Z0-9-_]+$/g.test(value))
+        .withMessage("Custom URL is not valid")
+        .custom(value => !exports.preservedUrls.some(url => url.toLowerCase() === value))
+        .withMessage("You can't use this custom URL."),
+    express_validator.body("expire_in")
+        .optional({ nullable: true, checkFalsy: true })
+        .isString()
+        .trim()
+        .custom(value => {
+            try {
+                return !!ms(value);
+            } catch {
+                return false;
+            }
+        })
+        .withMessage("Expire format is invalid. Valid examples: 1m, 8h, 42 days.")
+        .customSanitizer(ms)
+        .custom(value => value >= ms("1m"))
+        .withMessage("Minimum expire time should be '1 minute'.")
+        .customSanitizer(value => addMilliseconds(new Date(), value).toISOString()),
+    express_validator.body("description")
+        .optional({ nullable: true, checkFalsy: true })
+        .isString()
+        .trim()
+        .isLength({ min: 0, max: 2040 })
+        .withMessage("Description length must be between 0 and 2040."),
+    express_validator.param("id", "ID is invalid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isLength({ min: 36, max: 36 })
 ];
 
 exports.deleteLink = [
@@ -220,3 +280,91 @@ exports.removeDomain = [
         })
         .isLength({ min: 36, max: 36 })
 ];
+
+exports.cooldown = (user) => {
+    if (!env.GOOGLE_SAFE_BROWSING_KEY || !user || !user.cooldowns) return;
+
+    // If has active cooldown then throw error
+    const hasCooldownNow = user.cooldowns.some(cooldown =>
+        isAfter(subHours(new Date(), 12), new Date(cooldown))
+    );
+
+    if (hasCooldownNow) {
+        throw new CustomError("Cooldown because of a malware URL. Wait 12h");
+    }
+};
+
+exports.malware = async (user, target) => {
+    if (!env.GOOGLE_SAFE_BROWSING_KEY) return;
+
+    const isMalware = await axios.post(
+        `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${env.GOOGLE_SAFE_BROWSING_KEY}`,
+        {
+            client: {
+                clientId: env.DEFAULT_DOMAIN.toLowerCase().replace(".", ""),
+                clientVersion: "1.0.0"
+            },
+            threatInfo: {
+                threatTypes: [
+                    "THREAT_TYPE_UNSPECIFIED",
+                    "MALWARE",
+                    "SOCIAL_ENGINEERING",
+                    "UNWANTED_SOFTWARE",
+                    "POTENTIALLY_HARMFUL_APPLICATION"
+                ],
+                platformTypes: ["ANY_PLATFORM", "PLATFORM_TYPE_UNSPECIFIED"],
+                threatEntryTypes: [
+                    "EXECUTABLE",
+                    "URL",
+                    "THREAT_ENTRY_TYPE_UNSPECIFIED"
+                ],
+                threatEntries: [{ url: target }]
+            }
+        }
+    );
+
+    if (!isMalware.data || !isMalware.data.matches) return;
+
+    if (user) {
+        const [updatedUser] = await queries.default.user.update(
+            { id: user.id },
+            {cooldowns: knex.raw("array_append(cooldowns, ?)", [new Date().toISOString()])}
+        );
+
+        // Ban if too many cooldowns
+        if (updatedUser.cooldowns.length > 2) {
+            await queries.default.user.update({ id: user.id }, { banned: true });
+            throw new CustomError("Too much malware requests. You are now banned.");
+        }
+    }
+
+    throw new CustomError(
+        user ? "Malware detected! Cooldown for 12h." : "Malware detected!"
+    );
+};
+
+exports.bannedDomain = async (domain) => {
+    const isBanned = await queries.default.domain.find({address: domain, banned: true});
+
+    if (isBanned) {
+        throw new CustomError("URL is containing malware/scam.", 400);
+    }
+};
+
+exports.bannedHost = async (domain) => {
+    let isBanned;
+
+    try {
+        const dnsRes = await dnsLookup(domain);
+
+        if (!dnsRes || !dnsRes.address) return;
+        // TODO: Host queries
+        // isBanned = await queries.default.host.find({address: dnsRes.address, banned: true});
+    } catch (error) {
+        isBanned = null;
+    }
+
+    if (isBanned) {
+        throw new CustomError("URL is containing malware/scam.", 400);
+    }
+}

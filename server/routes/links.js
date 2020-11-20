@@ -27,13 +27,28 @@ router.post("/",
     asyncHandler(link.create)
     );
 
+router.patch("/:id",
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    validators.editLink,
+    asyncHandler(helpers.verify),
+    asyncHandler(link.edit)
+);
+
 router.delete("/:id",
     asyncHandler(auth.apikey),
     asyncHandler(auth.jwt),
     validators.deleteLink,
     asyncHandler(helpers.verify),
     asyncHandler(link.remove)
-    );
+);
+
+router.get("/:id/stats",
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    validators.getStats,
+    asyncHandler(link.stats)
+);
 
 
 

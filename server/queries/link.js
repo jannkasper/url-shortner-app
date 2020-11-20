@@ -1,5 +1,6 @@
 const knex = require("../knex");
 const redis = require("../redis");
+const bcrypt = require('bcryptjs');
 
 const {CustomError} = require('../utils');
 
@@ -146,4 +147,14 @@ exports.remove = async (match) => {
     redis.remove.link(link);
 
     return !!deletedLink;
-}
+};
+
+exports.update = async (match, update) => {
+    const links = await knex.db("links")
+        .where(match)
+        .update({...update, updated_at: new Date().toISOString()}, "*");
+
+    links.forEach(redis.remove.link);
+
+    return links;
+};
