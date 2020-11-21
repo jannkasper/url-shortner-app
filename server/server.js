@@ -17,6 +17,7 @@ const {env} = require('./env');
 const nextApp = require('next');
 
 require('./passport');
+require("./cron");
 
 const port = env.PORT;
 const app = nextApp({dir: "./client", dev: env.isDev});

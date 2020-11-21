@@ -119,8 +119,7 @@ exports.create = async (req, res) => {
     const link = await queries.default.link.create({password, address, domain_id, description, target, expire_in, user_id: req.user && req.user.id});
 
     if (!req.user && env.NON_USER_COOLDOWN) {
-        // TODO: ip queries
-        // queries.default.ip.add(req.realIP);
+        queries.default.ip.add(req.realIP);
     }
 
     return res.status(201).send(utils.sanitize.link({...link, domain: domainObject?.address}))

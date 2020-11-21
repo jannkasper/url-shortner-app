@@ -1,3 +1,5 @@
+const { isAfter, subDays, subHours, addMilliseconds } = require("date-fns");
+const {promisify} = require("util");
 const express_validator = require("express-validator");
 const URL = require("url");
 const axios = require("axios");
@@ -5,14 +7,11 @@ const urlRegex = require("url-regex");
 const bcrypt = require("bcryptjs");
 const ms = require("ms");
 const dns = require("dns");
-const {promisify} = require("util");
-const { isAfter, subDays, subHours, addMilliseconds } = require("date-fns");
 
+const {CustomError, addProtocol} = require("../utils");
 const queries = require('../queries');
 const knex = require("../knex");
-const {addProtocol} = require("../utils");
 const {env} = require("../env");
-const {CustomError} = require("../utils");
 
 const dnsLookup = promisify(dns.lookup);
 
@@ -390,6 +389,7 @@ exports.linksCount = async (user) => {
         );
     }
 };
+
 
 exports.redirectProtected = [
     express_validator.body("password", "Password is invalid.")

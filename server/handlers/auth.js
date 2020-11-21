@@ -1,5 +1,5 @@
+const {differenceInMinutes, subMinutes} = require("date-fns");
 const passport = require('passport');
-const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const {uuid} = require("uuidv4");
 const {nanoid} = require("nanoid");
@@ -63,7 +63,7 @@ exports.signup = async (req, res) => {
         req.user
     );
 
-    // TODO
+    // TODO mail
     // await mail.verification(user);
 
     return res.status(201).send({ message: "Verification email has been sent." });
@@ -219,4 +219,24 @@ exports.resetPassword = async (req, res, next) => {
     }
     return next();
 };
+
+exports.cooldown = async (req, res, next) => {
+    if (env.DISALLOW_ANONYMOUS_LINKS) return next();
+    const cooldownConfig = env.NON_USER_COOLDOWN;
+    if (req.user || !cooldownConfig) return next();
+
+    const ip = await queries.default.ip.find({
+        ip: req.realIP.toLowerCase(),
+        created_at: [">", subMinutes(new Date(), cooldownConfig).toISOString()]
+    });
+
+    if (ip) {
+        const timeToWait = cooldownConfig - differenceInMinutes(new Date(), new Date(ip.created_at));
+        throw new CustomError(
+            `Non-logged in users are limited. Wait ${timeToWait} minutes or log in.`,
+            400
+        );
+    }
+    next();
+}
 

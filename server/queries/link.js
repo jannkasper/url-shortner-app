@@ -164,3 +164,19 @@ exports.incrementVisit = async (match) => {
         .where(match)
         .increment("visit_count",1);
 };
+
+exports.batchRemove = async (match) => {
+    const deleteQuery = knex.db("links");
+    const findQuery = knex.db("links");
+
+    Object.entries(match).forEach(([key, value]) => {
+        findQuery.andWhere(key, ...(Array.isArray(value) ? value : [value]));
+        deleteQuery.andWhere(key, ...(Array.isArray(value) ? value : [value]));
+    })
+
+    const links = await findQuery;
+
+    links.forEach(redis.remove.link);
+
+    await deleteQuery.delete();
+}

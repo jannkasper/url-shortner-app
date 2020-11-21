@@ -1,4 +1,4 @@
-exports.createUserTable = async (knex) => {
+exports.createUserTable = async function (knex) {
     const hasTable = await knex.schema.hasTable("users");
     if (!hasTable) {
         await knex.schema.createTable("users", function (table) {

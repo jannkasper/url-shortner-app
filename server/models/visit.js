@@ -1,4 +1,4 @@
-exports.createVisitTable = async (knex) => {
+exports.createVisitTable = async function (knex) {
     const hasTable = await knex.schema.hasTable("visits");
     if (!hasTable) {
         await knex.schema.createTable("visits", function (table) {
