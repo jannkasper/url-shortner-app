@@ -1,10 +1,12 @@
-const {Domain, Link, User} = require('../../models');
+const {Domain, Link, User, Visit} = require('../../models');
 
 exports.up = async function(knex) {
 
     await User.createUserTable(knex);
     await Domain.createDomainTable(knex);
     await Link.createLinkTable(knex);
+    await Link.createLinkTable(knex);
+    await Visit.createVisitTable(knex);
 
     await Promise.all([
         knex.raw(`
@@ -28,6 +30,7 @@ exports.up = async function(knex) {
 
 exports.down = async function(knex) {
     return Promise.all([
+        knex.schema.dropTable("visits"),
         knex.schema.dropTable("links"),
         knex.schema.dropTable("domains"),
         knex.schema.dropTable("users")

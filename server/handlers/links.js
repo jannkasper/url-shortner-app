@@ -1,5 +1,6 @@
 const isbot = require('isbot');
 const URL = require('url');
+const bcrypt = require("bcryptjs");
 
 const validators = require('./validators');
 const queries = require('../queries');
@@ -41,7 +42,7 @@ exports.redirect = (app) => async (req, res, next) => {
 
     // 6. If link is protected, redirect to password page
     if (link.password) {
-        return res.redirect(`/protected/${link.uuid}`);
+        return res.redirect(`/${link.uuid}/protected`);
     }
 
     // 7. Create link visit
@@ -53,8 +54,20 @@ exports.redirect = (app) => async (req, res, next) => {
         })
     };
 
-    console.log("HERE: ", link.target);
-    // 8. Redirect to target
+    // TODO Google Analytics
+    // 8. Create Google Analytics visit
+    // if (env.GOOGLE_ANALYTICS_UNIVERSAL && !isBot) {
+    //     ua(env.GOOGLE_ANALYTICS_UNIVERSAL)
+    //         .pageview({
+    //             dp: `/${address}`,
+    //             ua: req.headers["user-agent"],
+    //             uip: req.realIP,
+    //             aip: 1
+    //         })
+    //         .send();
+    // }
+
+    // 9. Redirect to target
     return res.redirect(link.target);
 }
 
@@ -75,17 +88,42 @@ exports.redirectCustomDomain = async (req, res, next) => {
 };
 
 exports.create = async (req, res) => {
-    const {reuse, password, customurl, description, target, domain, expire_in} = req.body;
-    const domain_id = domain ? domain.id : null;
+    const {reuse, password, customurl, description, target, domainObject, expire_in} = req.body;
+    const domain_id = domainObject ? domainObject.id : null;
 
     const targetDomain = URL.parse(target).hostname;
+    const checks = await Promise.all([
+        validators.cooldown(req.user),
+        validators.malware(req.user, target),
+        validators.linksCount(req.user),
+        reuse && queries.default.link.find({target, user_id: req.user.id, domain_id}),
+        customurl && queries.default.link.find({address: customurl, domain_id}),
+        !customurl && utils.generateId(domain_id),
+        validators.bannedDomain(targetDomain),
+        validators.bannedHost(targetDomain)
+    ]);
+
+    // if "reuse" is true, try to return
+    // the existent URL without creating one
+    if (checks[3]) {
+        return res.json(utils.sanitize.link(checks[3]));
+    }
+
+    // Check if custom link already exists
+    if (checks[4]) {
+        throw new CustomError("Custom URL is already in use.");
+    }
 
     //Create new link
-    const address = customurl;
+    const address = customurl || checks[5];
+    const link = await queries.default.link.create({password, address, domain_id, description, target, expire_in, user_id: req.user && req.user.id});
 
-    const link = await queries.default.link.create({password, address, domain_id, description, target, expire_in, user_id: req.user && req.user.id})
+    if (!req.user && env.NON_USER_COOLDOWN) {
+        // TODO: ip queries
+        // queries.default.ip.add(req.realIP);
+    }
 
-    return res.status(201).send(utils.sanitize.link({...link, domain: domain?.address}))
+    return res.status(201).send(utils.sanitize.link({...link, domain: domainObject?.address}))
 };
 
 
@@ -164,4 +202,73 @@ exports.remove = async (req, res) => {
     return res
         .status(200)
         .send({ message: "Link has been deleted successfully." });
+};
+
+exports.stats =  async (req, res) => {
+    const { user } = req;
+    const uuid = req.params.id;
+
+    const link = await queries.default.link.find({...(!user.admin && { user_id: user.id }), uuid});
+
+    if (!link) {
+        throw new CustomError("Link could not be found.");
+    };
+
+    const stats = await queries.default.visit.find({ link_id: link.id }, link.visit_count);
+
+    if (!stats) {
+        throw new CustomError("Could not get the short link stats.");
+    }
+
+    return res.status(200).send({...stats, ...utils.sanitize.link(link)});
+};
+
+exports.redirectProtected = async (req, res) => {
+    // 1. Get link
+    const uuid = req.params.id;
+    const link = await queries.default.link.find({ uuid });
+
+    // 2. Throw error if no link
+    if (!link || !link.password) {
+        throw new CustomError("Couldn't find the link.", 400);
+    }
+
+    // 3. Check if password matches
+    const matches = await bcrypt.compare(req.body.password, link.password);
+
+    if (!matches) {
+        throw new CustomError("Password is not correct.", 401);
+    }
+
+    // 4. Create visit
+    if (link.user_id) {
+        queues.default.visit.add({
+            headers: req.headers,
+            realIP: req.realIP,
+            referrer: req.get("Referrer"),
+            link
+        });
+    }
+
+    // 6. Send target
+    return res.status(200).send({ target: link.target });
+};
+
+exports.report = async (req, res) => {
+    const { link } = req.body;
+
+    // TODO email
+    // const mail = await transporter.sendMail({
+    //     from: env.MAIL_FROM || env.MAIL_USER,
+    //     to: env.REPORT_EMAIL,
+    //     subject: "[REPORT]",
+    //     text: link,
+    //     html: link
+    // });
+
+    // if (!mail.accepted.length) {
+    //     throw new CustomError("Couldn't submit the report. Try again later.");
+    // }
+
+    return res.status(200).send({ message: "Thanks for the report, we'll take actions shortly." });
 }

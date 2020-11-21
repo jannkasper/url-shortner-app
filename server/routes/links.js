@@ -50,6 +50,18 @@ router.get("/:id/stats",
     asyncHandler(link.stats)
 );
 
+router.post("/:id/protected",
+    validators.redirectProtected,
+    asyncHandler(helpers.verify),
+    asyncHandler(link.redirectProtected)
+);
+
+router.post("/report",
+    validators.reportLink,
+    asyncHandler(helpers.verify),
+    asyncHandler(link.report)
+);
+
 
 
 module.exports = router;

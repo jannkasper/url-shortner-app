@@ -89,7 +89,7 @@ exports.create = async (params) => {
 };
 
 
-exports.total = async (match, params) => {
+exports.total = async (match, params= {}) => {
     const query = knex.db("links");
 
     Object.entries(match).forEach(([key, value]) => {
@@ -157,4 +157,10 @@ exports.update = async (match, update) => {
     links.forEach(redis.remove.link);
 
     return links;
+};
+
+exports.incrementVisit = async (match) => {
+    return knex.db("links")
+        .where(match)
+        .increment("visit_count",1);
 };

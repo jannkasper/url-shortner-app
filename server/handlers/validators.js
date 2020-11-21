@@ -77,8 +77,8 @@ exports.createLink = [
         .withMessage("Password length must be between 3 and 64."),
     express_validator.body("customurl")
         .optional({ nullable: true, checkFalsy: true })
-        // .custom(exports.checkUser) ???
-        // .withMessage("Only users can use this field.")
+        .custom(exports.checkUser)
+        .withMessage("Only users can use this field.")
         .isString()
         .trim()
         .isLength({ min: 1, max: 64 })
@@ -133,7 +133,8 @@ exports.createLink = [
                 address,
                 user_id: req.user.id
             });
-            req.body.domain = domain || null;
+            // TODO problem to overwrite domain param
+            req.body.domainObject = domain || null;
 
             if (!domain) return Promise.reject();
         })
@@ -195,6 +196,15 @@ exports.editLink = [
 ];
 
 exports.deleteLink = [
+    express_validator.param("id", "ID is invalid.")
+        .exists({
+            checkFalsy: true,
+            checkNull: true
+        })
+        .isLength({ min: 36, max: 36 })
+];
+
+exports.getStats = [
     express_validator.param("id", "ID is invalid.")
         .exists({
             checkFalsy: true,
@@ -367,4 +377,38 @@ exports.bannedHost = async (domain) => {
     if (isBanned) {
         throw new CustomError("URL is containing malware/scam.", 400);
     }
-}
+};
+
+exports.linksCount = async (user) => {
+    if (!user) return;
+
+    const count = await queries.default.link.total({user_id: user.id, created_at: [">", subDays(new Date(), 1).toISOString()]});
+
+    if (count > env.USER_LIMIT_PER_DAY) {
+        throw new CustomError(
+            `You have reached your daily limit (${env.USER_LIMIT_PER_DAY}). Please wait 24h.`
+        );
+    }
+};
+
+exports.redirectProtected = [
+    express_validator.body("password", "Password is invalid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isString()
+        .isLength({ min: 3, max: 64 })
+        .withMessage("Password length must be between 3 and 64."),
+    express_validator.param("id", "ID is invalid.")
+        .exists({ checkFalsy: true, checkNull: true })
+        .isLength({ min: 36, max: 36 })
+];
+
+exports.reportLink = [
+    express_validator.body("link", "No link has been provided.")
+        .exists({
+            checkFalsy: true,
+            checkNull: true
+        })
+        .customSanitizer(addProtocol)
+        .custom(value => URL.parse(value).hostname === env.DEFAULT_DOMAIN)
+        .withMessage(`You can only report a ${env.DEFAULT_DOMAIN} link.`)
+];
