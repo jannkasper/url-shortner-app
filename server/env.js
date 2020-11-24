@@ -1,5 +1,8 @@
 const {cleanEnv, num, str, bool} = require('envalid');
 
+const path = require('path')
+require('dotenv').config({path: path.resolve(__dirname, '../.env')})
+
 exports.env = cleanEnv(process.env, {
     PORT: num({ default: 4001 }),
     SITE_NAME: str({ default: "shortner-url" }),
