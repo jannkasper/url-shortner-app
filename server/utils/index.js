@@ -1,5 +1,5 @@
 const {differenceInDays, differenceInHours, differenceInMonths, addDays} = require("date-fns");
-const {customRandom} = require("nanoid");
+const customRandom = require("nanoid");
 const ms = require("ms");
 
 const {env} = require('../env');
@@ -67,8 +67,8 @@ exports.signToken = (user) => {
 
 exports.generateId = async (domain_id) => {
     const address = customRandom(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
-        env.LINK_LENGTH
+        env.LINK_LENGTH,
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
     );
     const link = await queries.default.link.find({ address, domain_id });
     if (!link) return address;

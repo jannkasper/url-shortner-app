@@ -91,38 +91,50 @@ exports.create = async (req, res) => {
     const {reuse, password, customurl, description, target, domainObject, expire_in} = req.body;
     const domain_id = domainObject ? domainObject.id : null;
 
-    const targetDomain = URL.parse(target).hostname;
-    const checks = await Promise.all([
-        validators.cooldown(req.user),
-        validators.malware(req.user, target),
-        validators.linksCount(req.user),
-        reuse && queries.default.link.find({target, user_id: req.user.id, domain_id}),
-        customurl && queries.default.link.find({address: customurl, domain_id}),
-        !customurl && utils.generateId(domain_id),
-        validators.bannedDomain(targetDomain),
-        validators.bannedHost(targetDomain)
-    ]);
+    try {
+        const targetDomain = URL.parse(target).hostname;
+        const checks = await Promise.all([
+            validators.cooldown(req.user),
+            validators.malware(req.user, target),
+            validators.linksCount(req.user),
+            reuse && queries.default.link.find({target, user_id: req.user.id, domain_id}),
+            customurl && queries.default.link.find({address: customurl, domain_id}),
+            !customurl && utils.generateId(domain_id),
+            validators.bannedDomain(targetDomain),
+            validators.bannedHost(targetDomain)
+        ]);
 
-    // if "reuse" is true, try to return
-    // the existent URL without creating one
-    if (checks[3]) {
-        return res.json(utils.sanitize.link(checks[3]));
+        // if "reuse" is true, try to return
+        // the existent URL without creating one
+        if (checks[3]) {
+            return res.json(utils.sanitize.link(checks[3]));
+        }
+
+        // Check if custom link already exists
+        if (checks[4]) {
+            throw new CustomError("Custom URL is already in use.");
+        }
+
+        //Create new link
+        const address = customurl || checks[5];
+        const link = await queries.default.link.create({
+            password,
+            address,
+            domain_id,
+            description,
+            target,
+            expire_in,
+            user_id: req.user && req.user.id
+        });
+
+        if (!req.user && env.NON_USER_COOLDOWN) {
+            queries.default.ip.add(req.realIP);
+        }
+
+        return res.status(201).send(utils.sanitize.link({...link, domain: domainObject?.address}))
+    } catch (e){
+        console.log(e);
     }
-
-    // Check if custom link already exists
-    if (checks[4]) {
-        throw new CustomError("Custom URL is already in use.");
-    }
-
-    //Create new link
-    const address = customurl || checks[5];
-    const link = await queries.default.link.create({password, address, domain_id, description, target, expire_in, user_id: req.user && req.user.id});
-
-    if (!req.user && env.NON_USER_COOLDOWN) {
-        queries.default.ip.add(req.realIP);
-    }
-
-    return res.status(201).send(utils.sanitize.link({...link, domain: domainObject?.address}))
 };
 
 
