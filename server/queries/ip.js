@@ -15,7 +15,7 @@ exports.add = async (ipToAdd) => {
         await knex.db("ips")
             .where({ip})
             .update({
-                create_at: currentDate,
+                created_at: currentDate,
                 updated_at: currentDate
             })
     } else {

@@ -4,8 +4,8 @@ import styled from "styled-components";
 import Router from "next/router";
 
 import { useStoreState, useStoreActions } from "../store";
-// import PageLoading from "./PageLoading";
-// import Header from "./Header";
+import PageLoading from "./PageLoading";
+import Header from "./Header";
 
 const Wrapper = styled(Flex)`
   input {
@@ -46,9 +46,8 @@ const AppWrapper = ({ children }: { children: any }) => {
       alignItems="center"
       flexDirection="column"
     >
-      {/*<Header />*/}
-      {/*{loading ? <PageLoading /> : children}*/}
-      {children}
+      <Header />
+      {loading ? <PageLoading /> : children}
     </Wrapper>
   );
 };
