@@ -19,7 +19,7 @@ const nextApp = require('next');
 require('./passport');
 require("./cron");
 
-const port = env.PORT;
+const port = process.env.PORT || env.PORT;
 const app = nextApp({dir: "./client", dev: env.isDev});
 const handle = app.getRequestHandler();
 
