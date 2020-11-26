@@ -11,7 +11,7 @@
     "server": "cd server && yarn start",
     "build": "rimraf production-server && tsc --project tsconfig.json && copyfiles -f \"server/mail/*.html\" production-server/mail && next build client/ ",
     "start": "npm run migrate && cross-env NODE_ENV=production node server/server.js",
-    "migrate": "knex migrate:latest"
+    "migrate": "knex migrate:latest --env production"
   },
   "dependencies": {
     "@sentry/apm": "^5.21.1",
