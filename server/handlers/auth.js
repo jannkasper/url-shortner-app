@@ -2,7 +2,7 @@ const {differenceInMinutes, subMinutes} = require("date-fns");
 const passport = require('passport');
 const bcrypt = require('bcryptjs');
 const {uuid} = require("uuidv4");
-const {nanoid} = require("nanoid");
+const nanoid = require("nanoid");
 const {addMinutes} =  require("date-fns");
 
 const queries = require('../queries');

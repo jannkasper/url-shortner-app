@@ -14,7 +14,7 @@ router.get('/',
     asyncHandler(user.get)
 );
 
-router.get('/delete',
+router.post('/delete',
     asyncHandler(auth.apikey),
     asyncHandler(auth.jwt),
     validators.deleteUser,
