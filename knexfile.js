@@ -1,7 +1,7 @@
 const {env} = require('./server/env');
 
 module.exports = {
-    development: {
+    production: {
         client: env.DB_NAME,
         connection: {
             database: env.DB,
@@ -15,6 +15,7 @@ module.exports = {
             }
         },
         migrations: {
+            tableName: "knex_migrations",
             directory: './server/db/migrations'
         },
         seeds: {

@@ -9,6 +9,7 @@ const queries = require('../queries');
 const redis = require('../redis');
 const {CustomError} = require('../utils');
 const utils = require('../utils');
+const mail = require("../mail");
 const {env} = require('../env');
 
 const authenticate = (type, error, isStrict = true) => async function auth(req, res , next) {
@@ -63,8 +64,7 @@ exports.signup = async (req, res) => {
         req.user
     );
 
-    // TODO mail
-    // await mail.verification(user);
+    await mail.verification(user);
 
     return res.status(201).send({ message: "Verification email has been sent." });
 
@@ -134,8 +134,7 @@ exports.changeEmailRequest = async (req, res) => {
     redis.remove.user(updatedUser);
 
     if (updatedUser) {
-        // TODO mail
-        // await mail.changeEmail({ ...updatedUser, email });
+        await mail.changeEmail({ ...updatedUser, email });
     }
     return res.status(200).send({message: "If email address exists, an email with a verification link has been sent."});
 };
@@ -195,8 +194,7 @@ exports.resetPasswordRequest = async (req, res) => {
     );
 
     if (user) {
-        // TODO mail
-        // await mail.resetPasswordToken(user);
+        await mail.resetPasswordToken(user);
     }
 
     return res.status(200).send({message: "If email address exists, a reset password email has been sent."});

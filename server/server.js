@@ -55,20 +55,20 @@ app.prepare().then(async() => {
 
     server.get("/reset-password/:resetPasswordToken?",
         asyncHandler(auth.resetPassword),
-        (req, res) => res.status(200).send(`${req.token}`)
-        // (req, res) => app.render(req, res, "/reset-password", { token: req.token })
+        // (req, res) => res.status(200).send(`${req.token}`)
+        (req, res) => app.render(req, res, "/reset-password", { token: req.token })
     );
 
     server.get("/verify/:verificationToken?",
         asyncHandler(auth.verify),
-        (req, res) => res.status(200).send(`${req.token}`)
-        // (req, res) => app.render(req, res, "/verify", { token: req.token })
+        // (req, res) => res.status(200).send(`${req.token}`)
+        (req, res) => app.render(req, res, "/verify", { token: req.token })
     );
 
     server.get("/verify-email/:changeEmailToken",
         asyncHandler(auth.changeEmail),
-        (req, res) => res.status(200).send(`${req.token}`)
-        // (req, res) => app.render(req, res, "/verify-email", { token: req.token })
+        // (req, res) => res.status(200).send(`${req.token}`)
+        (req, res) => app.render(req, res, "/verify-email", { token: req.token })
     );
 
     server.get('/:id',asyncHandler(links.redirect(app)));

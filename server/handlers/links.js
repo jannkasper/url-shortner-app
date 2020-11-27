@@ -6,6 +6,7 @@ const validators = require('./validators');
 const queries = require('../queries');
 const queues = require('../queues');
 const utils = require('../utils');
+const {transporter} = require("../mail/mail");
 const {env} = require('../env');
 const {CustomError} = require('../utils');
 
@@ -268,18 +269,17 @@ exports.redirectProtected = async (req, res) => {
 exports.report = async (req, res) => {
     const { link } = req.body;
 
-    // TODO email
-    // const mail = await transporter.sendMail({
-    //     from: env.MAIL_FROM || env.MAIL_USER,
-    //     to: env.REPORT_EMAIL,
-    //     subject: "[REPORT]",
-    //     text: link,
-    //     html: link
-    // });
+    const mail = await transporter.sendMail({
+        from: env.MAIL_FROM || env.MAIL_USER,
+        to: env.REPORT_EMAIL,
+        subject: "[REPORT]",
+        text: link,
+        html: link
+    });
 
-    // if (!mail.accepted.length) {
-    //     throw new CustomError("Couldn't submit the report. Try again later.");
-    // }
+    if (!mail.accepted.length) {
+        throw new CustomError("Couldn't submit the report. Try again later.");
+    }
 
     return res.status(200).send({ message: "Thanks for the report, we'll take actions shortly." });
 }

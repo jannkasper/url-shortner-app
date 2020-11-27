@@ -9,9 +9,11 @@
   "scripts": {
     "client": "cd client && yarn start",
     "server": "cd server && yarn start",
+    "dev": "npm run migrate && nodemon server/server.js",
     "build": "rimraf production-server && tsc --project tsconfig.json && copyfiles -f \"server/mail/*.html\" production-server/mail && next build client/ ",
-    "start": "cross-env NODE_ENV=production node server/server.js",
-    "migrate": "knex migrate:latest --env production"
+    "start": "npm run migrate && cross-env NODE_ENV=production node server/server.js",
+    "migrate": "knex migrate:latest --env production",
+    "migrate:make": "knex migrate:make --env production"
   },
   "dependencies": {
     "@sentry/apm": "^5.21.1",

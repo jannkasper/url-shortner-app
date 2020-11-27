@@ -32,7 +32,7 @@ const Footer: FC = () => {
         </ALink>
         .{" | "}
         <ALink
-          href="https://github.com/thedevs-network/kutt"
+          href="//github.com/jannkasper/url-shortner-app"
           title="GitHub"
           target="_blank"
         >
